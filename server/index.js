@@ -4,13 +4,10 @@ import express from "express";
 import React from "react";
 import { App } from "../client/App";
 import { renderToString } from "react-dom/server";
+import { handleModifyAnswerVotes } from "../shared/utility";
 
 const data = {
   questions: [
-    {
-      questionId: "Q3",
-      constent: "Should we use JQuery or Fetch for Ajax?",
-    },
     {
       questionId: "Q1",
       content: "Which back end solution should we use for our application?",
@@ -20,24 +17,22 @@ const data = {
       content:
         "What percentage of developer time should be devoted to end-to-end testing?",
     },
+    {
+      questionId: "Q3",
+      content: "Should we use JQuery or Fetch for Ajax?",
+    },
   ],
   answers: [
     {
-      answerId: "A7",
-      questionID: "Q3",
-      upvotes: 2,
-      content: "JQuery",
-    },
-    {
       answerId: "A1",
-      questionId: 1,
+      questionId: "Q1",
       upvotes: 2,
       content: "Apache",
     },
     {
       answerId: "A2",
       questionId: "Q1",
-      upvotes: 0,
+      upvotes: 1,
       content: "Java",
     },
     {
@@ -64,16 +59,41 @@ const data = {
       upvotes: 1,
       content: "75%",
     },
+    {
+      answerId: "A7",
+      questionId: "Q3",
+      upvotes: 2,
+      content: "JQuery",
+    },
+    {
+      answerId: "A8",
+      questionId: "Q3",
+      upvotes: 4,
+      content: "Ajax",
+    },
   ],
 };
 
 const app = new express();
 
 app.use(express.static("dist"));
+app.get("/vote/:answerId", (req, res) => {
+  const { query, params } = req;
+  data.answers = handleModifyAnswerVotes(
+    data.answers,
+    params.answerId,
+    +query.increment
+  );
+  res.send("OK");
+});
+
+app.get("/data", async (_req, res) => {
+  res.json(data);
+});
 
 app.get("/", async (_req, res) => {
   const index = readFileSync(`public/index.html`, `utf8`);
-  const rendered = renderToString(<App {...data}/>);
+  const rendered = renderToString(<App {...data} />);
   res.send(index.replace("{{rendered}}", rendered));
 });
 
